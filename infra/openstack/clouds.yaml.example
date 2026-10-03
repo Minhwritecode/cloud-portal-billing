@@ -1,0 +1,33 @@
+# Copy to a private clouds.yaml on the machine that runs the portal.
+# Never commit the filled-in file.
+#
+# For a DevStack VM, use the VM's reachable IP or DNS name below.
+
+clouds:
+  portal:
+    region_name: RegionOne
+    interface: public
+    identity_api_version: 3
+    auth:
+      auth_url: http://CHANGE_ME_VM_IP/identity
+      username: demo
+      password: CHANGE_ME_DEMO_PASSWORD
+      project_name: demo
+      user_domain_name: Default
+      project_domain_name: Default
+    compute_api_version: 2.1
+    volume_api_version: 3
+
+  # Keep an admin cloud only on a private machine if administrative checks are
+  # needed. The application should use the least-privileged portal cloud.
+  portal-admin:
+    region_name: RegionOne
+    interface: public
+    identity_api_version: 3
+    auth:
+      auth_url: http://CHANGE_ME_VM_IP/identity
+      username: admin
+      password: CHANGE_ME_ADMIN_PASSWORD
+      project_name: admin
+      user_domain_name: Default
+      project_domain_name: Default

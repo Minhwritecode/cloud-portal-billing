@@ -14,3 +14,12 @@ secure.yaml
 dist/
 build/
 *.egg-info/
+*.qcow2
+*.iso
+*.vmdk
+*.vmem
+*.nvram
+*.vmss
+*.lck/
+infra/devstack/local.conf
+infra/openstack/clouds.yaml

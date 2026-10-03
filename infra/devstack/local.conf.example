@@ -1,0 +1,33 @@
+# Copy this file to /opt/stack/devstack/local.conf inside the Ubuntu VM.
+# Replace every CHANGE_ME value before running ./stack.sh.
+#
+# This is a lab configuration for a single-node DevStack deployment.
+# Do not commit the filled-in local.conf: it contains passwords and network data.
+
+[[local|localrc]]
+
+# IP address of the Ubuntu VM on the bridged LAN.
+# Find it with: ip -br addr
+HOST_IP=CHANGE_ME_VM_IP
+
+# Use alphanumeric passwords for DevStack compatibility.
+ADMIN_PASSWORD=CHANGE_ME_ADMIN_PASSWORD
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+
+# Keep logs in a predictable location for troubleshooting.
+LOGFILE=$DEST/logs/stack.sh.log
+LOG_COLOR=False
+
+# The DevStack checkout is pinned in docs/phase-0-setup.md.
+
+# The following values are optional for a bridged VMware lab. Uncomment and
+# adapt them only after confirming the real LAN subnet and interface.
+# PUBLIC_INTERFACE=ens160
+# FLOATING_RANGE=192.168.1.0/24
+# PUBLIC_NETWORK_GATEWAY=192.168.1.1
+# Q_FLOATING_ALLOCATION_POOL=start=192.168.1.220,end=192.168.1.239
+
+# Keep the default DevStack service set. It includes Keystone, Glance, Nova,
+# Placement, Neutron, Horizon and Cinder needed by the project.
