@@ -39,6 +39,18 @@ cloud-portal/
 
 Chỉ bắt đầu code portal sau khi toàn bộ Phase 0 và Phase 1 trong checklist đã đạt.
 
+## Demo Phase 1
+
+Sau khi DevStack chạy và đã xác thực bằng `openrc`, nhóm có thể chạy bộ demo read-only:
+
+```bash
+cd /path/to/cloud-portal
+chmod +x scripts/phase1_demo.sh
+./scripts/phase1_demo.sh
+```
+
+Script này kiểm tra token, service, compute, network, image, flavor, server và kết nối Python SDK. Nó không tạo hoặc xóa tài nguyên.
+
 ## Môi trường ứng dụng sau khi OpenStack sẵn sàng
 
 ```bash
