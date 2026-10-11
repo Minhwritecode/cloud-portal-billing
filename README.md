@@ -64,6 +64,205 @@ chmod +x scripts/phase1_demo.sh
 
 Script này kiểm tra token, service, compute, network, image, flavor, server và kết nối Python SDK. Nó không tạo hoặc xóa tài nguyên.
 
+## Kịch bản demo giữa kỳ bằng Mac và UTM Ubuntu
+
+Mục tiêu demo:
+
+```text
+MacBook
+└── UTM Ubuntu VM
+    └── DevStack/OpenStack
+        └── Python openstacksdk gọi trực tiếp OpenStack API
+```
+
+Tất cả lệnh bên dưới chạy **trong Terminal của Ubuntu VM**, không chạy trong Terminal macOS. MacBook chỉ dùng để mở UTM và hiển thị màn hình demo.
+
+### Chuẩn bị trước giờ demo
+
+Chỉ cần làm một lần trước buổi bảo vệ:
+
+```bash
+cd ~/cloud-portal-billing
+git pull origin main
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+
+cd /opt/stack/devstack
+source openrc admin admin
+```
+
+Kiểm tra nhanh trước buổi demo:
+
+```bash
+openstack token issue
+openstack compute service list
+openstack network agent list
+openstack image list
+openstack flavor list
+openstack network list
+```
+
+Các tài nguyên đang có trong môi trường demo hiện tại:
+
+```text
+Image: cirros-0.6.3-x86_64-disk
+Flavor: m1.tiny, m1.small, m1.medium, ...
+Network: private, public, shared
+```
+
+### Kịch bản trình diễn chính
+
+#### 1. Mở môi trường cloud
+
+```bash
+hostname -I
+cd /opt/stack/devstack
+source openrc admin admin
+```
+
+#### 2. Chứng minh xác thực với Keystone
+
+```bash
+openstack token issue
+```
+
+Nói với hội đồng: “Portal/SDK có thể xác thực trực tiếp với Keystone của OpenStack.”
+
+#### 3. Chứng minh các service đang hoạt động
+
+```bash
+openstack service list
+openstack compute service list
+openstack network agent list
+```
+
+Kết quả cần thấy các service/agent ở trạng thái `enabled`, `up` hoặc `UP`.
+
+#### 4. Chứng minh OpenStack có tài nguyên để cấp VM
+
+```bash
+openstack image list
+openstack flavor list
+openstack network list
+```
+
+#### 5. Chạy demo Python SDK read-only
+
+```bash
+cd ~/cloud-portal-billing
+source .venv/bin/activate
+source /opt/stack/devstack/openrc admin admin
+
+./scripts/phase1_demo.sh
+```
+
+Kết quả cần có:
+
+```text
+AUTHENTICATION: OK
+CONNECTION: Python openstacksdk -> OpenStack API
+PHASE 1 RESULT: PASS
+```
+
+Đây là phần chứng minh trực tiếp bằng Python, không chỉ dùng Horizon hay thao tác thủ công.
+
+#### 6. Tùy chọn tạo VM để demo end-to-end
+
+Nếu muốn cho hội đồng thấy OpenStack thực sự tạo VM:
+
+```bash
+cd /opt/stack/devstack
+source openrc admin admin
+
+openstack server create demo-vm \
+  --image cirros-0.6.3-x86_64-disk \
+  --flavor m1.tiny \
+  --network private
+```
+
+Theo dõi trạng thái:
+
+```bash
+watch -n 3 'openstack server show demo-vm -f value -c status'
+```
+
+Kết quả cần chuyển từ:
+
+```text
+BUILD
+ACTIVE
+```
+
+Khi đã `ACTIVE`, hiển thị chi tiết:
+
+```bash
+openstack server show demo-vm
+openstack server list
+```
+
+Nếu cần xem log khởi động:
+
+```bash
+openstack console log show demo-vm | tail -n 50
+```
+
+#### 7. Đối chiếu trên Horizon
+
+Lấy IP Ubuntu VM:
+
+```bash
+hostname -I
+```
+
+Mở trình duyệt trong Ubuntu hoặc trên Mac nếu mạng cho phép:
+
+```text
+http://IP_UBUNTU_VM/dashboard
+```
+
+Đăng nhập bằng tài khoản `admin` và mở `Compute → Instances`. VM `demo-vm` phải xuất hiện ở trạng thái `Active`.
+
+#### 8. Dọn VM sau demo
+
+Nếu không cần giữ VM:
+
+```bash
+openstack server delete demo-vm
+```
+
+### Chuỗi lệnh ngắn nhất để demo
+
+Nếu đã chuẩn bị sẵn mọi thứ, chỉ cần chạy:
+
+```bash
+cd ~/cloud-portal-billing
+source .venv/bin/activate
+source /opt/stack/devstack/openrc admin admin
+./scripts/phase1_demo.sh
+
+openstack server create demo-vm \
+  --image cirros-0.6.3-x86_64-disk \
+  --flavor m1.tiny \
+  --network private
+
+watch -n 3 'openstack server show demo-vm -f value -c status'
+```
+
+Kịch bản này chứng minh đầy đủ:
+
+```text
+Keystone authentication
+→ OpenStack service health
+→ Python SDK direct connection
+→ Image/flavor/network discovery
+→ Nova creates a real VM
+→ VM becomes ACTIVE
+```
+
+Nếu chỉ cần chứng minh kết nối direct theo yêu cầu giữa kỳ, dừng sau `PHASE 1 RESULT: PASS`. Bước tạo `demo-vm` là phần bổ sung để demo thuyết phục hơn.
+
 ## Làm việc nhóm với một OpenStack VM dùng chung
 
 Git chỉ đồng bộ source code và script. `git clone` **không** sao chép trạng thái Ubuntu VM, DevStack, database OpenStack, image, network, server, password hay token. Vì vậy, clone repository trên máy thành viên không tự làm máy đó có OpenStack.
